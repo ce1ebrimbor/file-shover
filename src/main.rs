@@ -1,0 +1,125 @@
+use clap::Parser;
+use env_logger;
+use log::{debug, info, warn, error};
+use std::io::{ErrorKind, Read};
+use std::net::TcpListener;
+use std::net::TcpStream;
+use std::path::PathBuf;
+
+mod files;
+mod message;
+use files::FileTree;
+use message::{HttpStatus, Request, Response};
+
+/// A simple static file server
+#[derive(Parser, Debug)]
+#[command(name = "file-shover")]
+#[command(about = "A static file server written in Rust")]
+#[command(version = "1.0")]
+struct Args {
+    /// Root directory to serve files from
+    #[arg(short, long, value_name = "PATH")]
+    root: PathBuf,
+
+    /// Port to listen on
+    #[arg(short, long, default_value = "7878")]
+    port: u16,
+}
+
+// parse request
+fn handle_client(stream: TcpStream, file_tree: &FileTree) {
+    debug!("New client connection");
+    
+    // Parse the request and handle parsing errors
+    let req = match Request::from_bytes(&stream) {
+        Ok(request) => request,
+        Err(e) => {
+            debug!("Failed to parse request: {}", e);
+            let response = Response::new()
+                .status(HttpStatus::BadRequest)
+                .content_type("text/html")
+                .server("file-shover/1.0")
+                .body("<h1>400 Bad Request</h1>");
+            
+            if let Err(write_err) = response.write(stream) {
+                debug!("Failed to write error response: {}", write_err);
+            }
+            return;
+        }
+    };
+    
+    info!("Request: {} {}", req.method, req.path);
+
+    let response = match file_tree.get_reader(&req.path) {
+        Err(e) => {
+            if e.kind() == ErrorKind::NotFound {
+                info!("File not found: {}", req.path);
+                Response::new()
+                    .status(HttpStatus::NotFound)
+                    .content_type("text/html")
+                    .server("file-shover/1.0")
+                    .body("<h1>404 Not Found</h1>")
+            } else {
+                info!("Server error for {}: {}", req.path, e);
+                Response::new()
+                    .status(HttpStatus::InternalServerError)
+                    .content_type("text/html")
+                    .server("file-shover/1.0")
+                    .body("<h1>500 Internal Server Error</h1>")
+            }
+        }
+        Ok(mut reader) => {
+            let mut body = String::new();
+            match reader.read_to_string(&mut body) {
+                Ok(_) => {
+                    info!("Successfully served: {}", req.path);
+                    Response::new()
+                        .status(HttpStatus::Ok)
+                        .content_type("text/html")
+                        .server("file-shover/1.0")
+                        .body(body)
+                }
+                Err(e) => {
+                    debug!("Error reading file {}: {}", req.path, e);
+                    Response::new()
+                        .status(HttpStatus::InternalServerError)
+                        .content_type("text/html")
+                        .server("file-shover/1.0")
+                        .body("<h1>500 Internal Server Error</h1>")
+                }
+            }
+        }
+    };
+
+    if let Err(e) = response.write(stream) {
+        debug!("Failed to write response: {}", e);
+    }
+}
+
+fn main() -> std::io::Result<()> {
+    // Initialize the logger
+    env_logger::init();
+
+    let args = Args::parse();
+
+    let bind_address = format!("0.0.0.0:{}", args.port);
+    let listener = TcpListener::bind(&bind_address)?;
+    let file_tree = FileTree::new(args.root.clone());
+
+    info!("🚀 File Shover server starting...");
+    info!("📁 Serving files from: {}", args.root.display());
+    info!("🌐 Listening on: http://{}", bind_address);
+    info!("Press Ctrl+C to stop the server");
+
+    for stream in listener.incoming() {
+        match stream {
+            Ok(stream) => {
+                handle_client(stream, &file_tree);
+            }
+            Err(e) => {
+                eprintln!("Connection failed: {}", e);
+            }
+        }
+    }
+    Ok(())
+}
