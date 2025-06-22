@@ -33,8 +33,8 @@ RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
 ```rust
 // This loads entire file into memory - not optimal for large files
 let mut reader = tree.get_reader("large_file.mp4")?;
-let mut content = String::new();
-reader.read_to_string(&mut content)?;
+let mut content = Vec::new();
+reader.read_to_end(&mut content)?;
 response.body(content)
 ```
 
