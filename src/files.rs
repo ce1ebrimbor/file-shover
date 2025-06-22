@@ -27,7 +27,7 @@ use std::path::{Path, PathBuf};
 /// use std::path::PathBuf;
 /// use file_shover::files::FileTree;
 /// 
-/// let tree = FileTree::new(PathBuf::from("tests/filetrees"));
+/// let tree = FileTree::new(PathBuf::from("test-sites"));
 /// let reader = tree.get_reader("one-file/index.html")?;
 /// Ok::<(), std::io::Error>(())
 /// ```
@@ -110,12 +110,12 @@ mod tests {
     fn test_works() {
         let tree = FileTree::new(PathBuf::from("."));
         let mut reader = tree
-            .get_reader(Path::new("tests/filetrees/one-file/index.html"))
+            .get_reader(Path::new("test-sites/one-file/index.html"))
             .expect("Failed to open test file");
         let mut buff = Vec::new();
         reader.read_to_end(&mut buff)
             .expect("Failed to read file content");
-        assert_eq!(buff, "<h1>Hello World</h1>\n".as_bytes().to_vec())
+        assert_eq!(buff, "<h1>Hello World</h1>".as_bytes().to_vec())
     }
 
     #[test]
@@ -127,14 +127,14 @@ mod tests {
 
     #[test]
     fn test_root_directory_handling() {
-        let tree = FileTree::new(PathBuf::from("tests/filetrees"));
+        let tree = FileTree::new(PathBuf::from("test-sites"));
         let mut reader = tree
             .get_reader("one-file/index.html")
             .expect("Failed to open file with different root");
         let mut buff = Vec::new();
         reader.read_to_end(&mut buff)
             .expect("Failed to read content");
-        assert_eq!(buff, "<h1>Hello World</h1>\n".as_bytes().to_vec())
+        assert_eq!(buff, "<h1>Hello World</h1>".as_bytes().to_vec())
     }
 
     #[test]

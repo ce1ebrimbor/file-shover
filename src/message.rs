@@ -235,7 +235,7 @@ impl Default for Response {
             headers: HashMap::new(),
             body: None,
         };
-        df.server("file-shover/1.0")
+        df.server("file-shover/1.0").header("Connection", "close")
     }
 }
 
@@ -359,7 +359,7 @@ impl Response {
     /// # Errors
     ///
     /// Returns an `std::io::Error` if writing to the stream fails.
-    pub fn write<W: Write>(&self, mut stream: W) -> std::io::Result<()> {
+    pub fn write<W: Write>(&self, stream: &mut W) -> std::io::Result<()> {
         // Status line
         writeln!(stream, "HTTP/1.1 {}", self.status.as_str())?;
 

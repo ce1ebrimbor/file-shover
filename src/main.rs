@@ -30,7 +30,7 @@ struct Args {
 }
 
 // parse request
-fn handle_client(stream: TcpStream, file_tree: &FileTree) {
+fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
     debug!("New client connection");
     
     // Parse the request and handle parsing errors
@@ -43,8 +43,12 @@ fn handle_client(stream: TcpStream, file_tree: &FileTree) {
                 .content_type("text/html")
                 .body("<h1>400 Bad Request</h1>".as_bytes().to_vec());
             
-            if let Err(write_err) = response.write(stream) {
+            if let Err(write_err) = response.write(&mut stream) {
                 debug!("Failed to write error response: {}", write_err);
+            }
+
+            if let Err(e) = stream.shutdown(std::net::Shutdown::Both) {
+                debug!("Failed to shutdown stream: {}", e);
             }
             return;
         }
@@ -90,8 +94,12 @@ fn handle_client(stream: TcpStream, file_tree: &FileTree) {
         }
     };
 
-    if let Err(e) = response.write(stream) {
+    if let Err(e) = response.write(&mut stream) {
         debug!("Failed to write response: {}", e);
+    }
+
+    if let Err(e) = stream.shutdown(std::net::Shutdown::Both) {
+        debug!("Failed to shutdown stream: {}", e);
     }
 }
 
