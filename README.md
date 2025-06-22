@@ -2,6 +2,11 @@
 
 Painfully naive implementation of a static web server in Rust. Built for learning and experimentation.
 
+**How to run:**
+```
+RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
+```
+
 ## Architecture
 
 ### Current Design
