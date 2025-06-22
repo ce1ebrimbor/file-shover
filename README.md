@@ -1,6 +1,6 @@
 # File Shover
 
-A static file server written in Rust.
+Painfully naive implementation of a static web server in Rust. Built for learning and experimentation.
 
 ## Architecture
 
@@ -47,6 +47,7 @@ response.body(content)
 ## Future Improvements
 
 ### Phase 1: Core Streaming
+- [ ] **Add Multi-threading**
 - [ ] Implement streaming response bodies
 - [ ] Add binary file support
 - [ ] Maintain backward compatibility for simple text responses
