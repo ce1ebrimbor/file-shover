@@ -417,7 +417,7 @@ impl Request {
         reader.read_line(&mut request_line)?;
 
         // Parse request line
-        let mut parts = request_line.trim().split_whitespace();
+        let mut parts = request_line.trim().split_ascii_whitespace();
         let method = parts
             .next()
             .ok_or(RequestError::InvalidFormat)?
