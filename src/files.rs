@@ -14,7 +14,7 @@
 
 
 use std::fs::File;
-use std::io::{BufReader, Error, Read};
+use std::io::{BufReader, Error};
 use std::path::{Path, PathBuf};
 
 /// A file tree rooted at a specific directory path.

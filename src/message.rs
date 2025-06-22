@@ -210,7 +210,7 @@ impl std::fmt::Display for HttpStatus {
 ///     .status(HttpStatus::Ok)
 ///     .content_type("text/html")
 ///     .server("file-shover/1.0")
-///     .body("<html><body>Hello World</body></html>");
+///     .body("<html><body>Hello World</body></html>".as_bytes());
 ///
 /// // Write to a buffer
 /// let mut buffer = Vec::new();
@@ -225,16 +225,17 @@ impl std::fmt::Display for HttpStatus {
 pub struct Response {
     pub status: HttpStatus,
     pub headers: HashMap<String, String>,
-    pub body: Option<String>,
+    pub body: Option<Vec<u8>>,
 }
 
 impl Default for Response {
     fn default() -> Self {
-        Self {
+        let df = Self {
             status: HttpStatus::Ok,
             headers: HashMap::new(),
             body: None,
-        }
+        };
+        df.server("file-shover/1.0")
     }
 }
 
@@ -296,11 +297,11 @@ impl Response {
     /// ```
     /// use file_shover::message::Response;
     ///
-    /// let response = Response::new().body("Hello, World!");
-    /// assert_eq!(response.body, Some("Hello, World!".to_string()));
+    /// let response = Response::new().body("Hello, World!".as_bytes().to_vec());
+    /// assert_eq!(response.body, Some("Hello, World!".as_bytes().to_vec()));
     /// ```
-    pub fn body(mut self, body: impl Into<String>) -> Self {
-        self.body = Some(body.into());
+    pub fn body(mut self, body: Vec<u8>) -> Self {
+        self.body = Some(body);
         self
     }
 
@@ -345,7 +346,7 @@ impl Response {
     /// let response = Response::new()
     ///     .status(HttpStatus::Ok)
     ///     .content_type("text/plain")
-    ///     .body("Hello, World!");
+    ///     .body("Hello, World!".as_bytes().to_vec());
     ///
     /// let mut buffer = Vec::new();
     /// response.write(&mut buffer).unwrap();
@@ -373,7 +374,7 @@ impl Response {
 
         // Body (if present)
         if let Some(ref body) = self.body {
-            write!(stream, "{}", body)?;
+            stream.write_all(body)?;
         }
 
         Ok(())
@@ -508,11 +509,11 @@ mod tests {
             .status(HttpStatus::Ok)
             .content_type("text/html")
             .server("test-server")
-            .body("Hello World");
+            .body("Hello World".as_bytes());
 
         assert_eq!(response.status, HttpStatus::Ok);
         assert_eq!(response.headers.get("Content-Type"), Some(&"text/html".to_string()));
         assert_eq!(response.headers.get("Server"), Some(&"test-server".to_string()));
-        assert_eq!(response.body, Some("Hello World".to_string()));
+        assert_eq!(response.body, Some("Hello World".as_bytes().to_vec()));
     }
 }

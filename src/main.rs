@@ -8,8 +8,11 @@ use std::path::PathBuf;
 
 mod files;
 mod message;
+mod data;
+
 use files::FileTree;
 use message::{HttpStatus, Request, Response};
+use data::get_mime_type;
 
 /// A simple static file server
 #[derive(Parser, Debug)]
@@ -38,8 +41,7 @@ fn handle_client(stream: TcpStream, file_tree: &FileTree) {
             let response = Response::new()
                 .status(HttpStatus::BadRequest)
                 .content_type("text/html")
-                .server("file-shover/1.0")
-                .body("<h1>400 Bad Request</h1>");
+                .body("<h1>400 Bad Request</h1>".as_bytes().to_vec());
             
             if let Err(write_err) = response.write(stream) {
                 debug!("Failed to write error response: {}", write_err);
@@ -57,26 +59,24 @@ fn handle_client(stream: TcpStream, file_tree: &FileTree) {
                 Response::new()
                     .status(HttpStatus::NotFound)
                     .content_type("text/html")
-                    .server("file-shover/1.0")
-                    .body("<h1>404 Not Found</h1>")
+                    .body("<h1>404 Not Found</h1>".as_bytes().to_vec())
             } else {
                 info!("Server error for {}: {}", req.path, e);
                 Response::new()
                     .status(HttpStatus::InternalServerError)
                     .content_type("text/html")
-                    .server("file-shover/1.0")
-                    .body("<h1>500 Internal Server Error</h1>")
+                    .body("<h1>500 Internal Server Error</h1>".as_bytes().to_vec())
             }
         }
         Ok(mut reader) => {
-            let mut body = String::new();
-            match reader.read_to_string(&mut body) {
+            let mut body = Vec::new();
+            match reader.read_to_end(&mut body) {
                 Ok(_) => {
                     info!("Successfully served: {}", req.path);
+                    let mime_type = get_mime_type(&req.path);
                     Response::new()
                         .status(HttpStatus::Ok)
-                        .content_type("text/html")
-                        .server("file-shover/1.0")
+                        .content_type(mime_type.as_str())
                         .body(body)
                 }
                 Err(e) => {
@@ -84,8 +84,7 @@ fn handle_client(stream: TcpStream, file_tree: &FileTree) {
                     Response::new()
                         .status(HttpStatus::InternalServerError)
                         .content_type("text/html")
-                        .server("file-shover/1.0")
-                        .body("<h1>500 Internal Server Error</h1>")
+                        .body("<h1>500 Internal Server Error</h1>".as_bytes().to_vec())
                 }
             }
         }

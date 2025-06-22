@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Page Test Site - About</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        nav {
+            background: #333;
+            padding: 10px 0;
+            margin: -30px -30px 30px -30px;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        nav li {
+            margin: 0 15px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        nav a:hover, nav a.active {
+            background: #555;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html" class="active">About</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="subdir/nested.html">Nested Page</a></li>
+            </ul>
+        </nav>
+
+        <h1>About This Test Site</h1>
+        
+        <p>This static website is specifically designed to test various aspects of HTTP static file servers. Here's what makes it useful for testing:</p>
+
+        <h2>📋 Testing Features</h2>
+        
+        <h3>Basic File Serving</h3>
+        <ul>
+            <li>Multiple HTML files in the root directory</li>
+            <li>Inter-page navigation using relative links</li>
+            <li>Inline CSS styles (no external stylesheets required)</li>
+            <li>Proper HTML5 document structure</li>
+        </ul>
+
+        <h3>Directory Structure</h3>
+        <ul>
+            <li>Files in the root directory (index.html, about.html, etc.)</li>
+            <li>Subdirectory with nested files</li>
+            <li>Navigation that tests path resolution</li>
+        </ul>
+
+        <h3>HTTP Protocol Testing</h3>
+        <ul>
+            <li>GET requests for different file types</li>
+            <li>Proper Content-Type headers</li>
+            <li>404 error handling for missing files</li>
+            <li>Path traversal security (try accessing ../../../etc/passwd)</li>
+        </ul>
+
+        <h2>🧪 Recommended Tests</h2>
+        
+        <ol>
+            <li><strong>Basic Navigation:</strong> Click through all the navigation links</li>
+            <li><strong>Direct URL Access:</strong> Try accessing pages directly via URL</li>
+            <li><strong>404 Testing:</strong> Try accessing non-existent files</li>
+            <li><strong>Security Testing:</strong> Try path traversal attacks</li>
+            <li><strong>Performance:</strong> Refresh pages multiple times to test caching</li>
+        </ol>
+
+        <h2>🔍 What to Look For</h2>
+        
+        <ul>
+            <li>Pages load without errors</li>
+            <li>Navigation works correctly</li>
+            <li>Styles are applied properly</li>
+            <li>Server responds with appropriate HTTP status codes</li>
+            <li>Console shows no JavaScript errors (if any)</li>
+        </ul>
+
+        <p><a href="index.html">← Back to Home</a></p>
+    </div>
+</body>
+</html> 

@@ -7,8 +7,8 @@ Painfully naive implementation of a static web server in Rust. Built for learnin
 ### Current Design
 
 - **FileTree**: Provides streaming file access via `get_reader()` - returns `BufReader<File>` for memory-efficient file reading
-- **HTTP Message Handling**: Request parsing and response generation with convenience methods for common HTTP operations
-- **Response System**: Currently stores entire response body in memory as `String`
+- **HTTP Message Handling**: Request parsing and response generation with convenience methods for`common HTTP operations
+- **Response System**: Currently stores entire response body in memory as `String` or `Vec<u8>`
 
 ### Known Limitations
 
@@ -38,19 +38,13 @@ response.body(content)
 2. **Generic Response**: `Response<R>` where R can be String or Reader
 3. **Separate Streaming Method**: Add `write_with_reader()` method to Response
 
-#### 🚧 Binary File Support
-
-**Issue**: Current Response only handles String bodies, limiting support to UTF-8 text files.
-
-**Impact**: Cannot properly serve binary files (images, PDFs, executables, etc.)
 
 ## Future Improvements
 
 ### Phase 1: Core Streaming
 - [ ] **Add Multi-threading**
 - [ ] Implement streaming response bodies
-- [ ] Add binary file support
-- [ ] Maintain backward compatibility for simple text responses
+- [x] Add binary file support
 
 ### Phase 2: Performance
 - [ ] Add Content-Length header calculation
@@ -60,7 +54,8 @@ response.body(content)
 ### Phase 3: Features
 - [ ] HTTP caching headers (ETag, Last-Modified)
 - [ ] Range requests for partial content
-- [ ] MIME type detection
+- [x] MIME type detection
+    - Basic MimeType
 - [ ] Directory listing
 
 ## Development Notes
