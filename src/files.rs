@@ -14,7 +14,7 @@
 
 
 use std::fs::File;
-use std::io::{BufReader, Error};
+use std::io::{BufReader, Error, Read};
 use std::path::{Path, PathBuf};
 
 /// A file tree rooted at a specific directory path.
@@ -112,10 +112,10 @@ mod tests {
         let mut reader = tree
             .get_reader(Path::new("tests/filetrees/one-file/index.html"))
             .expect("Failed to open test file");
-        let mut buff = String::new();
-        reader.read_to_string(&mut buff)
+        let mut buff = Vec::new();
+        reader.read_to_end(&mut buff)
             .expect("Failed to read file content");
-        assert_eq!(buff.as_str(), "<h1>Hello World</h1>\n")
+        assert_eq!(buff, "<h1>Hello World</h1>\n".as_bytes().to_vec())
     }
 
     #[test]
@@ -131,10 +131,10 @@ mod tests {
         let mut reader = tree
             .get_reader("one-file/index.html")
             .expect("Failed to open file with different root");
-        let mut buff = String::new();
-        reader.read_to_string(&mut buff)
+        let mut buff = Vec::new();
+        reader.read_to_end(&mut buff)
             .expect("Failed to read content");
-        assert_eq!(buff.as_str(), "<h1>Hello World</h1>\n")
+        assert_eq!(buff, "<h1>Hello World</h1>\n".as_bytes().to_vec())
     }
 
     #[test]

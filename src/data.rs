@@ -26,7 +26,7 @@ mod tests {
 
     #[test]
     fn test_mime_type_to_str() {
-        assert_eq!(MimeType::TextHtml.to_str(), "text/html");
+        assert_eq!(MimeType::TextHtml.as_str(), "text/html");
     }
 }
 

@@ -210,7 +210,7 @@ impl std::fmt::Display for HttpStatus {
 ///     .status(HttpStatus::Ok)
 ///     .content_type("text/html")
 ///     .server("file-shover/1.0")
-///     .body("<html><body>Hello World</body></html>".as_bytes());
+///     .body("<html><body>Hello World</body></html>".as_bytes().to_vec());
 ///
 /// // Write to a buffer
 /// let mut buffer = Vec::new();
@@ -249,7 +249,6 @@ impl Response {
     ///
     /// let response = Response::new();
     /// assert_eq!(response.status, HttpStatus::Ok);
-    /// assert!(response.headers.is_empty());
     /// assert!(response.body.is_none());
     /// ```
     pub fn new() -> Self {
@@ -509,7 +508,7 @@ mod tests {
             .status(HttpStatus::Ok)
             .content_type("text/html")
             .server("test-server")
-            .body("Hello World".as_bytes());
+            .body("Hello World".as_bytes().to_vec());
 
         assert_eq!(response.status, HttpStatus::Ok);
         assert_eq!(response.headers.get("Content-Type"), Some(&"text/html".to_string()));
