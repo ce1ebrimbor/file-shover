@@ -19,8 +19,6 @@ RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
 
 #### 🚧 Streaming Response Mismatch
 
-**Issue**: Architectural mismatch between streaming file reading and in-memory response bodies.
-
 - **FileTree** is designed for streaming: `get_reader()` returns a reader for memory-efficient file access
 
 ## Future Improvements

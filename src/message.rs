@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read, Write, Cursor};
 
+const BUFFER_SIZE: usize = 64 * 1024;
 /// Errors that can occur when parsing HTTP requests.
 ///
 /// This enum covers various failure modes that can happen during request parsing,
@@ -373,7 +374,7 @@ impl Response {
 
         // Body (if present)
         if let Some(ref mut body) = self.body {
-            let mut buffer = [0; 1024 * 1024];
+            let mut buffer = [0; BUFFER_SIZE];
             loop {
                 let bytes_read = body.read(&mut buffer)?;
                 if bytes_read == 0 {

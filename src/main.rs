@@ -73,24 +73,12 @@ fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
             }
         }
         Ok(mut reader) => {
-            let mut body = Vec::new();
-            match reader.read_to_end(&mut body) {
-                Ok(_) => {
-                    info!("Successfully served: {}", req.path);
-                    let mime_type = get_mime_type(&req.path);
-                    Response::new()
-                        .status(HttpStatus::Ok)
-                        .content_type(mime_type.as_str())
-                        .body(Box::new(Cursor::new(body)))
-                }
-                Err(e) => {
-                    debug!("Error reading file {}: {}", req.path, e);
-                    Response::new()
-                        .status(HttpStatus::InternalServerError)
-                        .content_type("text/html")
-                        .body(Box::new(Cursor::new("<h1>500 Internal Server Error</h1>".as_bytes())))
-                }
-            }
+            info!("Successfully served: {}", req.path);
+            let mime_type = get_mime_type(&req.path);
+            Response::new()
+                .status(HttpStatus::Ok)
+                .content_type(mime_type.as_str())
+                .body(Box::new(reader))
         }
     };
 
