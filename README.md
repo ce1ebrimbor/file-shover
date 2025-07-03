@@ -25,6 +25,7 @@ RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
 
 ### Phase 1: Core Streaming
 - [ ] **Add Multi-threading**
+- [ ] **Keep connection alive ?**
 - [x] Implement streaming response bodies
 - [x] Add binary file support
 
@@ -36,9 +37,10 @@ RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
 ### Phase 3: Features
 - [ ] HTTP caching headers (ETag, Last-Modified)
 - [ ] Range requests for partial content
-- [x] MIME type detection
+- [ ] MIME type detection
     - Basic MimeType
 - [ ] Directory listing
+- [ ] Graceful shutdown
 
 ## Development Notes
 
