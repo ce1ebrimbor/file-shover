@@ -22,7 +22,6 @@ RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
 **Issue**: Architectural mismatch between streaming file reading and in-memory response bodies.
 
 - **FileTree** is designed for streaming: `get_reader()` returns a reader for memory-efficient file access
-- **Response** is designed for in-memory: `body: Option<String>` forces entire content into memory
 
 **Impact**: 
 - Cannot efficiently serve large files (videos, images, archives)
@@ -30,25 +29,12 @@ RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
 - Loses the streaming benefits of the FileTree design
 
 **Current Workaround**: 
-```rust
-// This loads entire file into memory - not optimal for large files
-let mut reader = tree.get_reader("large_file.mp4")?;
-let mut content = Vec::new();
-reader.read_to_end(&mut content)?;
-response.body(content)
-```
-
-**Future Solutions**:
-1. **Enum-based ResponseBody**: Support both `String` and `Box<dyn Read>` bodies
-2. **Generic Response**: `Response<R>` where R can be String or Reader
-3. **Separate Streaming Method**: Add `write_with_reader()` method to Response
-
 
 ## Future Improvements
 
 ### Phase 1: Core Streaming
 - [ ] **Add Multi-threading**
-- [ ] Implement streaming response bodies
+- [x] Implement streaming response bodies
 - [x] Add binary file support
 
 ### Phase 2: Performance
@@ -67,4 +53,3 @@ response.body(content)
 
 - Current focus is on getting basic HTTP functionality working
 - Streaming optimizations are deliberately deferred to avoid premature optimization
-- The FileTree reader-based design is correct - Response needs to catch up 
