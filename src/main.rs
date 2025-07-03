@@ -1,7 +1,7 @@
 use clap::Parser;
 use env_logger;
 use log::{debug, info, warn, error};
-use std::io::{ErrorKind, Read};
+use std::io::{Cursor, ErrorKind, Read};
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::path::PathBuf;
@@ -38,10 +38,10 @@ fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
         Ok(request) => request,
         Err(e) => {
             debug!("Failed to parse request: {}", e);
-            let response = Response::new()
+            let mut response = Response::new()
                 .status(HttpStatus::BadRequest)
                 .content_type("text/html")
-                .body("<h1>400 Bad Request</h1>".as_bytes().to_vec());
+                .body(Box::new(Cursor::new("<h1>400 Bad Request</h1>".as_bytes())));
             
             if let Err(write_err) = response.write(&mut stream) {
                 debug!("Failed to write error response: {}", write_err);
@@ -56,20 +56,20 @@ fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
     
     info!("Request: {} {}", req.method, req.path);
 
-    let response = match file_tree.get_reader(&req.path) {
+    let mut response = match file_tree.get_reader(&req.path) {
         Err(e) => {
             if e.kind() == ErrorKind::NotFound {
                 info!("File not found: {}", req.path);
                 Response::new()
                     .status(HttpStatus::NotFound)
                     .content_type("text/html")
-                    .body("<h1>404 Not Found</h1>".as_bytes().to_vec())
+                    .body(Box::new(Cursor::new("<h1>404 Not Found</h1>".as_bytes())))
             } else {
                 info!("Server error for {}: {}", req.path, e);
                 Response::new()
                     .status(HttpStatus::InternalServerError)
                     .content_type("text/html")
-                    .body("<h1>500 Internal Server Error</h1>".as_bytes().to_vec())
+                    .body(Box::new(Cursor::new("<h1>500 Internal Server Error</h1>".as_bytes())))
             }
         }
         Ok(mut reader) => {
@@ -81,14 +81,14 @@ fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
                     Response::new()
                         .status(HttpStatus::Ok)
                         .content_type(mime_type.as_str())
-                        .body(body)
+                        .body(Box::new(Cursor::new(body)))
                 }
                 Err(e) => {
                     debug!("Error reading file {}: {}", req.path, e);
                     Response::new()
                         .status(HttpStatus::InternalServerError)
                         .content_type("text/html")
-                        .body("<h1>500 Internal Server Error</h1>".as_bytes().to_vec())
+                        .body(Box::new(Cursor::new("<h1>500 Internal Server Error</h1>".as_bytes())))
                 }
             }
         }
@@ -104,7 +104,6 @@ fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
 }
 
 fn main() -> std::io::Result<()> {
-    // Initialize the logger
     env_logger::init();
 
     let args = Args::parse();

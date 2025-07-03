@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::io::{BufRead, BufReader, Read, Write, Cursor};
 
 /// Errors that can occur when parsing HTTP requests.
 ///
@@ -206,11 +206,11 @@ impl std::fmt::Display for HttpStatus {
 /// use file_shover::message::{Response, HttpStatus};
 /// use std::io::Cursor;
 ///
-/// let response = Response::new()
+/// let mut response = Response::new()
 ///     .status(HttpStatus::Ok)
 ///     .content_type("text/html")
 ///     .server("file-shover/1.0")
-///     .body("<html><body>Hello World</body></html>".as_bytes().to_vec());
+///     .body(Box::new(Cursor::new("<html><body>Hello World</body></html>".as_bytes())));
 ///
 /// // Write to a buffer
 /// let mut buffer = Vec::new();
@@ -221,11 +221,10 @@ impl std::fmt::Display for HttpStatus {
 /// assert!(response_str.contains("Content-Type: text/html"));
 /// assert!(response_str.contains("Hello World"));
 /// ```
-#[derive(Debug)]
 pub struct Response {
     pub status: HttpStatus,
     pub headers: HashMap<String, String>,
-    pub body: Option<Vec<u8>>,
+    pub body: Option<Box<dyn Read>>,
 }
 
 impl Default for Response {
@@ -262,7 +261,7 @@ impl Response {
     /// ```
     /// use file_shover::message::{Response, HttpStatus};
     ///
-    /// let response = Response::new().status(HttpStatus::NotFound);
+    /// let mut response = Response::new().status(HttpStatus::NotFound);
     /// assert_eq!(response.status, HttpStatus::NotFound);
     /// ```
     pub fn status(mut self, status: HttpStatus) -> Self {
@@ -277,7 +276,7 @@ impl Response {
     /// ```
     /// use file_shover::message::Response;
     ///
-    /// let response = Response::new()
+    /// let mut response = Response::new()
     ///     .header("Content-Type", "application/json")
     ///     .header("Cache-Control", "no-cache");
     ///
@@ -294,12 +293,13 @@ impl Response {
     /// # Examples
     ///
     /// ```
+    /// use std::io::Cursor;
     /// use file_shover::message::Response;
     ///
-    /// let response = Response::new().body("Hello, World!".as_bytes().to_vec());
-    /// assert_eq!(response.body, Some("Hello, World!".as_bytes().to_vec()));
+    /// let mut response = Response::new().body(Box::new(Cursor::new("Hello, World!".as_bytes())));
+    /// //assert_eq!(response.body, Some(Box::new(Cursor::new("Hello, World!".as_bytes()))));
     /// ```
-    pub fn body(mut self, body: Vec<u8>) -> Self {
+    pub fn body(mut self, body: Box<dyn Read>) -> Self {
         self.body = Some(body);
         self
     }
@@ -342,10 +342,10 @@ impl Response {
     /// use file_shover::message::{Response, HttpStatus};
     /// use std::io::Cursor;
     ///
-    /// let response = Response::new()
+    /// let mut response = Response::new()
     ///     .status(HttpStatus::Ok)
     ///     .content_type("text/plain")
-    ///     .body("Hello, World!".as_bytes().to_vec());
+    ///     .body(Box::new(Cursor::new("Hello, World!".as_bytes())));
     ///
     /// let mut buffer = Vec::new();
     /// response.write(&mut buffer).unwrap();
@@ -359,7 +359,7 @@ impl Response {
     /// # Errors
     ///
     /// Returns an `std::io::Error` if writing to the stream fails.
-    pub fn write<W: Write>(&self, stream: &mut W) -> std::io::Result<()> {
+    pub fn write<W: Write>(&mut self, stream: &mut W) -> std::io::Result<()> {
         // Status line
         writeln!(stream, "HTTP/1.1 {}", self.status.as_str())?;
 
@@ -372,8 +372,15 @@ impl Response {
         writeln!(stream)?;
 
         // Body (if present)
-        if let Some(ref body) = self.body {
-            stream.write_all(body)?;
+        if let Some(ref mut body) = self.body {
+            let mut buffer = [0; 1024 * 1024];
+            loop {
+                let bytes_read = body.read(&mut buffer)?;
+                if bytes_read == 0 {
+                    break;
+                }
+                stream.write_all(&buffer[..bytes_read])?;
+            }
         }
 
         Ok(())
@@ -504,15 +511,18 @@ mod tests {
     #[test]
     fn test_response_builder() {
         // Test the response builder pattern
-        let response = Response::new()
+        let mut response = Response::new()
             .status(HttpStatus::Ok)
             .content_type("text/html")
             .server("test-server")
-            .body("Hello World".as_bytes().to_vec());
+            .body(Box::new(Cursor::new("Hello World".as_bytes())));
 
         assert_eq!(response.status, HttpStatus::Ok);
         assert_eq!(response.headers.get("Content-Type"), Some(&"text/html".to_string()));
         assert_eq!(response.headers.get("Server"), Some(&"test-server".to_string()));
-        assert_eq!(response.body, Some("Hello World".as_bytes().to_vec()));
+        // body
+        let mut body = Vec::new();
+        response.body.unwrap().read_to_end(&mut body).unwrap();
+        assert_eq!(body, "Hello World".as_bytes().to_vec());
     }
 }
