@@ -23,13 +23,6 @@ RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
 
 - **FileTree** is designed for streaming: `get_reader()` returns a reader for memory-efficient file access
 
-**Impact**: 
-- Cannot efficiently serve large files (videos, images, archives)
-- Memory usage scales with file size instead of remaining constant
-- Loses the streaming benefits of the FileTree design
-
-**Current Workaround**: 
-
 ## Future Improvements
 
 ### Phase 1: Core Streaming
