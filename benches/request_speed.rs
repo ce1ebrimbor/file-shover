@@ -1,3 +1,7 @@
+// Before running the benchmarks start a server
+// RUST_LOG=debug cargo run -- --root test-sites --port 7878
+
+
 use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 use reqwest;
 use std::hint::black_box;
