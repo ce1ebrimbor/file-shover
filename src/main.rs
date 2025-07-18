@@ -1,5 +1,6 @@
 use clap::Parser;
 use env_logger;
+use file_shover::files::FileData;
 use log::{debug, error, info, warn};
 use std::io::{Cursor, ErrorKind, Read};
 use std::net::TcpListener;
@@ -32,8 +33,6 @@ struct Args {
 
 // parse request
 fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
-    debug!("New client connection");
-
     // Parse the request and handle parsing errors
     let req = match Request::from_bytes(&stream) {
         Ok(request) => request,
@@ -75,12 +74,16 @@ fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
                     )))
             }
         }
-        Ok(reader) => {
+        Ok(files::FileData {
+            mut reader,
+            metadata,
+        }) => {
             info!("Successfully served: {}", req.path);
             let mime_type = get_mime_type(&req.path);
             Response::new()
                 .status(HttpStatus::Ok)
                 .content_type(mime_type.as_str())
+                .content_length(metadata.len())
                 .body(Box::new(reader))
         }
     };

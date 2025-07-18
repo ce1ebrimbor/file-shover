@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Read, Write, Cursor};
+use std::io::{BufRead, BufReader, Read, Write};
 
 const BUFFER_SIZE: usize = 64 * 1024;
 /// Errors that can occur when parsing HTTP requests.
@@ -335,6 +335,19 @@ impl Response {
         self.header("Server", name)
     }
 
+    /// Sets the Content-Length header.
+    /// # Examples
+    ///
+    /// ```
+    /// use file_shover::message::Response;
+    ///
+    /// let response = Response::new().content_length(66);
+    /// assert_eq!(response.headers.get("Content-Length"), Some(&"66".to_string()));
+    /// ```
+    pub fn content_length(self, length: u64) -> Self {
+        self.header("Content-Length", length.to_string())
+    }
+
     /// Writes the HTTP response to the provided writer.
     ///
     /// # Examples
@@ -467,7 +480,10 @@ mod tests {
         // Test all valid HTTP methods
         assert_eq!(HttpMethod::from_str("GET").unwrap(), HttpMethod::GET);
         assert_eq!(HttpMethod::from_str("HEAD").unwrap(), HttpMethod::HEAD);
-        assert_eq!(HttpMethod::from_str("OPTIONS").unwrap(), HttpMethod::OPTIONS);
+        assert_eq!(
+            HttpMethod::from_str("OPTIONS").unwrap(),
+            HttpMethod::OPTIONS
+        );
     }
 
     #[test]
@@ -506,7 +522,10 @@ mod tests {
         // Test HTTP status display
         assert_eq!(HttpStatus::Ok.to_string(), "200 OK");
         assert_eq!(HttpStatus::NotFound.to_string(), "404 Not Found");
-        assert_eq!(HttpStatus::InternalServerError.to_string(), "500 Internal Server Error");
+        assert_eq!(
+            HttpStatus::InternalServerError.to_string(),
+            "500 Internal Server Error"
+        );
     }
 
     #[test]
@@ -519,8 +538,14 @@ mod tests {
             .body(Box::new(Cursor::new("Hello World".as_bytes())));
 
         assert_eq!(response.status, HttpStatus::Ok);
-        assert_eq!(response.headers.get("Content-Type"), Some(&"text/html".to_string()));
-        assert_eq!(response.headers.get("Server"), Some(&"test-server".to_string()));
+        assert_eq!(
+            response.headers.get("Content-Type"),
+            Some(&"text/html".to_string())
+        );
+        assert_eq!(
+            response.headers.get("Server"),
+            Some(&"test-server".to_string())
+        );
         // body
         let mut body = Vec::new();
         response.body.unwrap().read_to_end(&mut body).unwrap();
