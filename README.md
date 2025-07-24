@@ -24,13 +24,13 @@ RUST_LOG=debug cargo run -- --root test-sites/simple-portfolio -p 7878
 ## Future Improvements
 
 ### Phase 1: Core Streaming
-- [ ] **Add Multi-threading**
+- [x] **Add Multi-threading**
 - [ ] **Keep connection alive ?**
 - [x] Implement streaming response bodies
 - [x] Add binary file support
 
 ### Phase 2: Performance
-- [ ] Add Content-Length header calculation
+- [x] Add Content-Length header calculation
 - [ ] Implement chunked transfer encoding
 - [ ] Add compression support (gzip, brotli)
 
