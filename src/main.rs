@@ -14,7 +14,10 @@ mod message;
 
 use data::get_mime_type;
 use files::FileTree;
-use message::{HttpStatus, Request, Response};
+use message::{
+    HttpStatus, Request, Response, DEFAULT_BAD_REQUEST_BODY, DEFAULT_INTERNAL_ERROR_BODY,
+    DEFAULT_NOT_FOUND_BODY,
+};
 
 /// A simple static file server
 #[derive(Parser, Debug)]
@@ -41,7 +44,8 @@ fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
             let mut response = Response::new()
                 .status(HttpStatus::BadRequest)
                 .content_type("text/html")
-                .body(Box::new(Cursor::new("<h1>400 Bad Request</h1>".as_bytes())));
+                .content_length(DEFAULT_NOT_FOUND_BODY.as_bytes().len())
+                .body(Box::new(Cursor::new(DEFAULT_BAD_REQUEST_BODY.as_bytes())));
 
             if let Err(write_err) = response.write(&mut stream) {
                 debug!("Failed to write error response: {}", write_err);
@@ -63,14 +67,16 @@ fn handle_client(mut stream: TcpStream, file_tree: &FileTree) {
                 Response::new()
                     .status(HttpStatus::NotFound)
                     .content_type("text/html")
-                    .body(Box::new(Cursor::new("<h1>404 Not Found</h1>".as_bytes())))
+                    .content_length(DEFAULT_NOT_FOUND_BODY.as_bytes().len())
+                    .body(Box::new(Cursor::new(DEFAULT_NOT_FOUND_BODY.as_bytes())))
             } else {
                 info!("Server error for {}: {}", req.path, e);
                 Response::new()
                     .status(HttpStatus::InternalServerError)
                     .content_type("text/html")
+                    .content_length(DEFAULT_INTERNAL_ERROR_BODY.as_bytes().len())
                     .body(Box::new(Cursor::new(
-                        "<h1>500 Internal Server Error</h1>".as_bytes(),
+                        DEFAULT_INTERNAL_ERROR_BODY.as_bytes(),
                     )))
             }
         }

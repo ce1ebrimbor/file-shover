@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read, Write};
 
+pub const DEFAULT_BAD_REQUEST_BODY: &str = "<h1>400 Bad Request</h1>";
+pub const DEFAULT_NOT_FOUND_BODY: &str = "<h1>404 Not Found</h1>";
+pub const DEFAULT_INTERNAL_ERROR_BODY: &str = "<h1>500 Internal Server Error</h1>";
+
 const BUFFER_SIZE: usize = 64 * 1024;
 /// Errors that can occur when parsing HTTP requests.
 ///
@@ -199,6 +203,26 @@ impl std::fmt::Display for HttpStatus {
     }
 }
 
+/// Wrapper type for content length values that accepts both usize and u64.
+/// 
+/// This allows the `content_length` method to work with both file metadata (u64)
+/// and slice/string lengths (usize) without requiring explicit casting.
+#[derive(Debug, Clone, Copy)]
+pub struct ContentLength(u64);
+
+impl From<u64> for ContentLength {
+    fn from(length: u64) -> Self {
+        ContentLength(length)
+    }
+}
+
+impl From<usize> for ContentLength {
+    fn from(length: usize) -> Self {
+        // Safe conversion: usize fits in u64 on all supported platforms
+        ContentLength(length as u64)
+    }
+}
+
 /// HTTP response.
 ///
 /// # Examples
@@ -336,16 +360,24 @@ impl Response {
     }
 
     /// Sets the Content-Length header.
+    /// Accepts both usize and u64 values for maximum convenience.
+    /// 
     /// # Examples
     ///
     /// ```
     /// use file_shover::message::Response;
     ///
-    /// let response = Response::new().content_length(66);
+    /// // Works with u64 (file metadata)
+    /// let response = Response::new().content_length(66u64);
     /// assert_eq!(response.headers.get("Content-Length"), Some(&"66".to_string()));
+    /// 
+    /// // Also works with usize (slice/string lengths)
+    /// let data = "hello world";
+    /// let response = Response::new().content_length(data.len());
+    /// assert_eq!(response.headers.get("Content-Length"), Some(&"11".to_string()));
     /// ```
-    pub fn content_length(self, length: u64) -> Self {
-        self.header("Content-Length", length.to_string())
+    pub fn content_length(self, length: impl Into<ContentLength>) -> Self {
+        self.header("Content-Length", length.into().0.to_string())
     }
 
     /// Writes the HTTP response to the provided writer.
@@ -474,6 +506,7 @@ impl Request {
 mod tests {
     use super::*;
     use std::str::FromStr;
+    use std::io::Cursor;
 
     #[test]
     fn test_http_method_from_str_valid_cases() {
